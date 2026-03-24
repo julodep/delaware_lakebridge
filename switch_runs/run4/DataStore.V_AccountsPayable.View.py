@@ -409,7 +409,7 @@ JOIN (
         LES.`Name`,
         G.GroupCurrencyCode AS GroupCurrency
     FROM dbo.SMRBILedgerStaging LES
-    CROSS JOIN (SELECT TOP 1 GroupCurrencyCode FROM ETL.GroupCurrency) G
+    CROSS JOIN (SELECT LIMIT 1 GroupCurrencyCode FROM ETL.GroupCurrency) G
 ) L
     ON L.`Name` = VTS.DataAreaId
 LEFT JOIN DataStore.ExchangeRate RC
@@ -456,12 +456,9 @@ WHERE P.YearId >= 2005
 # ------------------------------------------------------------
 # Execute the view creation.
 # ------------------------------------------------------------
-try:
-    spark.sql(qs_view_sql)
-except Exception as e:
-    # Log the error and stop notebook execution if needed
-    print(f"Error creating view DataStore.V_AccountsPayable: {e}")
-    dbutils.notebook.exit("View creation failed")
+
+spark.sql(qs_view_sql.strip())
+
 
 # COMMAND ----------
 
