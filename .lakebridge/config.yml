@@ -1,0 +1,6 @@
+catalog_name: remorph
+error_file_path: C:\Users\depoplimontj\.databricks\labs\lakebridge\lib\errors.log
+output_folder: C:\Users\depoplimontj\.databricks\labs\lakebridge\lib\transpiled
+schema_name: transpiler
+skip_validation: true
+version: 3
