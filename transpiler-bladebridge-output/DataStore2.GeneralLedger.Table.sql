@@ -1,0 +1,46 @@
+/****** Object:  Table [DataStore2].[GeneralLedger]    Script Date: 03/03/2026 16:26:08 ******/
+
+
+
+CREATE OR REPLACE TABLE `DataStore2`.`GeneralLedger`(
+	`GeneralLedgerIdScreening`  STRING NOT NULL,
+	`RecId` bigint NOT NULL,
+	`TransactionText`  STRING NOT NULL,
+	`TransactionCode`  STRING NOT NULL,
+	`IsDebitCredit`  STRING,
+	`Voucher`  STRING NOT NULL,
+	`CompanyCode`  STRING,
+	`DefaultExchangeRateTypeCode`  STRING NOT NULL,
+	`BudgetExchangeRateTypeCode`  STRING NOT NULL,
+	`TransactionCurrencyCode`  STRING,
+	`AccountingCurrencyCode`  STRING NOT NULL,
+	`ReportingCurrencyCode`  STRING NOT NULL,
+	`GroupCurrencyCode`  STRING NOT NULL,
+	`GLAccountId` bigint NOT NULL,
+	`IntercompanyId` bigint NOT NULL,
+	`BusinessSegmentId` bigint NOT NULL,
+	`DepartmentId` bigint NOT NULL,
+	`EndCustomerId` bigint NOT NULL,
+	`LocationId` bigint NOT NULL,
+	`ShipmentContractId` bigint NOT NULL,
+	`LocalAccountId` bigint NOT NULL,
+	`ProductFDId` bigint NOT NULL,
+	`VendorId` bigint NOT NULL,
+	`DocumentDate` TIMESTAMP NOT NULL,
+	`PostingDate` TIMESTAMP NOT NULL,
+	`AmountTC`  DECIMAL(32,6) NOT NULL,
+	`AmountAC`  DECIMAL(32,6) NOT NULL,
+	`AmountRC`  DECIMAL(32,6) NOT NULL,
+	`AmountGC`  DECIMAL(32,6) NOT NULL,
+	`AmountAC_Budget`  DECIMAL(38,6) NOT NULL,
+	`AmountRC_Budget`  DECIMAL(38,6) NOT NULL,
+	`AmountGC_Budget`  DECIMAL(38,6) NOT NULL,
+	`AppliedExchangeRateTC`  DECIMAL(38,17) ,
+	`AppliedExchangeRateAC`  DECIMAL(38,6) NOT NULL,
+	`AppliedExchangeRateRC`  DECIMAL(38,6) NOT NULL,
+	`AppliedExchangeRateGC`  DECIMAL(38,17) NOT NULL,
+	`AppliedExchangeRateAC_Budget`  DECIMAL(38,17) NOT NULL,
+	`AppliedExchangeRateRC_Budget`  DECIMAL(38,17) NOT NULL,
+	`AppliedExchangeRateGC_Budget`  DECIMAL(38,17) NOT NULL
+)
+;

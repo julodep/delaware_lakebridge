@@ -1,0 +1,46 @@
+/****** Object:  Table [DataStore6].[ProductCostBreakdownTheoretical]    Script Date: 03/03/2026 16:26:08 ******/
+
+
+
+CREATE OR REPLACE TABLE `DataStore6`.`ProductCostBreakdownTheoretical`(
+	`BOMCalcTransRecId` BIGINT,
+	`CompanyCode`  STRING NOT NULL,
+	`FinishedProductCode`  STRING NOT NULL,
+	`ProductCode`  STRING NOT NULL,
+	`InventDimCode`  STRING NOT NULL,
+	`CalculationType`  STRING,
+	`PriceType`  STRING NOT NULL,
+	`CalculationCode`  STRING NOT NULL,
+	`IsCalculatedPrice`  STRING,
+	`IsMaxCalculation`  STRING,
+	`IsMaxPrice`  STRING,
+	`Levelling`  STRING,
+	`Resource_`  STRING,
+	`CostGroupCode`  STRING,
+	`CostPriceUnitSymbol`  STRING NOT NULL,
+	`CostPriceCalculationNumber`  STRING NOT NULL,
+	`CostPriceModel`  STRING,
+	`CostPriceVersion`  STRING NOT NULL,
+	`CostPriceType`  STRING,
+	`CalculationDate` TIMESTAMP NOT NULL,
+	`IsActivePrice`  STRING,
+	`AccountingCurrencyCode`  STRING NOT NULL,
+	`ReportingCurrencyCode`  STRING NOT NULL,
+	`GroupCurrencyCode`  STRING NOT NULL,
+	`DefaultExchangeRateTypeCode`  STRING NOT NULL,
+	`BudgetExchangeRateTypeCode`  STRING NOT NULL,
+	`Level_1`  STRING NOT NULL,
+	`Level_2`  STRING NOT NULL,
+	`Level_3`  STRING NOT NULL,
+	`ProductCostPriceAC`  DECIMAL(38,17) NOT NULL,
+	`ProductCostPriceRC` decimal(38, 13) NOT NULL,
+	`ProductCostPriceGC` decimal(38, 13) NOT NULL,
+	`ProductCostPriceRC_Budget` decimal(38, 13) NOT NULL,
+	`ProductCostPriceGC_Budget` decimal(38, 13) NOT NULL,
+	`ComponentCostPriceAC`  DECIMAL(38,17) NOT NULL,
+	`ComponentCostPriceRC`  DECIMAL(38,17) NOT NULL,
+	`ComponentCostPriceGC`  DECIMAL(38,17) NOT NULL,
+	`ComponentCostPriceRC_Budget`  DECIMAL(38,17) NOT NULL,
+	`ComponentCostPriceGC_Budget`  DECIMAL(38,17) NOT NULL
+)
+;

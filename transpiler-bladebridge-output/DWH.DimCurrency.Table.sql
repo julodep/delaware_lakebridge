@@ -1,0 +1,16 @@
+/****** Object:  Table [DWH].[DimCurrency]    Script Date: 03/03/2026 16:26:09 ******/
+
+
+
+CREATE OR REPLACE TABLE `DWH`.`DimCurrency`(
+	`DimCurrencyId` BIGINT GENERATED ALWAYS AS IDENTITY NOT NULL,
+	`CurrencyCode`  STRING NOT NULL,
+	`CurrencyName`  STRING NOT NULL,
+	`ModifiedETLRunId` int NOT NULL,
+	`CreatedETLRunId` int NOT NULL,
+ CONSTRAINT `PK_DimCurrency` PRIMARY KEY CLUSTERED 
+(
+	`DimCurrencyId` ASC
+)WITH(STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+;

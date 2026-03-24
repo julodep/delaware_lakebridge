@@ -1,0 +1,24 @@
+/****** Object:  Table [ETL].[Run]    Script Date: 03/03/2026 16:26:09 ******/
+
+
+
+CREATE OR REPLACE TABLE `ETL`.`Run`(
+	`ETLRunId` BIGINT GENERATED ALWAYS AS IDENTITY NOT NULL,
+	`ExecutionInstanceGUID` `STRING` ,
+	`PackageName`  STRING,
+	`StartTime` TIMESTAMP ,
+	`EndTime` TIMESTAMP ,
+	`Duration`  AS (`EndTime`-`StartTime`),
+	`Machine`  STRING,
+	`Version`  STRING,
+	`ServerExecutionId` INT,
+ CONSTRAINT `PK_ETLRun` PRIMARY KEY CLUSTERED 
+(
+	`ETLRunId` ASC
+)WITH(STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+;
+
+WITH CHECK ADD  CONSTRAINT `FK_Run_Run` FOREIGN KEY(`ETLRunId`)
+REFERENCES `ETL`.`Run` (`ETLRunId`)
+;

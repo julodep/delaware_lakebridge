@@ -1,0 +1,35 @@
+/****** Object:  StoredProcedure [dbo].[uspRebuildTablesD365]    Script Date: 03/03/2026 16:26:09 ******/
+
+
+
+
+CREATE OR REPLACE PROCEDURE `dbo`.`uspRebuildTablesD365`(
+)
+LANGUAGE SQL
+SQL SECURITY INVOKER
+AS
+
+BEGIN
+
+DECLARE VARIABLE V_Query STRING ;
+
+SET V_Query = ''
+;
+
+SET V_Query = (
+SELECT
+CONCAT(V_Query,'ALTER TABLE ',TABLE_SCHEMA, '.', TABLE_NAME, ' REBUILD', CHAR(13)) FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'dbo'
+    AND TABLE_TYPE = 'BASE TABLE'
+
+
+
+ LIMIT 1);
+EXECUTE IMMEADIATE V_Query
+
+
+;
+
+SELECT -1 AS 
+
+END

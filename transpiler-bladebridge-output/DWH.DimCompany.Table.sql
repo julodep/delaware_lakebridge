@@ -1,0 +1,18 @@
+/****** Object:  Table [DWH].[DimCompany]    Script Date: 03/03/2026 16:26:08 ******/
+
+
+
+CREATE OR REPLACE TABLE `DWH`.`DimCompany`(
+	`DimCompanyId` BIGINT GENERATED ALWAYS AS IDENTITY NOT NULL,
+	`CompanyCode`  STRING NOT NULL,
+	`CompanyName`  STRING NOT NULL,
+	`CompanyCodeName`  STRING NOT NULL,
+	`CompanyType`  STRING NOT NULL,
+	`CreatedETLRunId` int NOT NULL,
+	`ModifiedETLRunId` int NOT NULL,
+ CONSTRAINT `PK_DimCompany` PRIMARY KEY CLUSTERED 
+(
+	`DimCompanyId` ASC
+)WITH(STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+;

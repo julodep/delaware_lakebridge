@@ -1,0 +1,43 @@
+/****** Object:  Table [DataStore].[PurchaseBudget]    Script Date: 03/03/2026 16:26:09 ******/
+
+
+
+CREATE OR REPLACE TABLE `DataStore`.`PurchaseBudget`(
+	`ProductCode`  STRING NOT NULL,
+	`ForecastModelCode`  STRING NOT NULL,
+	`CompanyCode`  STRING NOT NULL,
+	`SupplierCode`  STRING NOT NULL,
+	`DefaultExchangeRateTypeCode`  STRING NOT NULL,
+	`BudgetExchangeRateTypeCode`  STRING NOT NULL,
+	`TransactionCurrencyCode`  STRING NOT NULL,
+	`AccountingCurrencyCode`  STRING NOT NULL,
+	`ReportingCurrencyCode`  STRING NOT NULL,
+	`GroupCurrencyCode`  STRING NOT NULL,
+	`DefaultDimension` bigint NOT NULL,
+	`InventDimCode`  STRING NOT NULL,
+	`BudgetDate` TIMESTAMP ,
+	`PurchaseUnit`  STRING NOT NULL,
+	`BudgetQuantity`  DECIMAL(32,6) NOT NULL,
+	`PurchUnitPriceTC`  DECIMAL(32,6) NOT NULL,
+	`PurchUnitPriceAC`  DECIMAL(38,6) NOT NULL,
+	`PurchUnitPriceRC`  DECIMAL(38,6) NOT NULL,
+	`PurchUnitPriceGC`  DECIMAL(38,6) NOT NULL,
+	`PurchUnitPriceAC_Budget`  DECIMAL(38,6) NOT NULL,
+	`PurchUnitPriceRC_Budget`  DECIMAL(38,6) NOT NULL,
+	`PurchUnitPriceGC_Budget`  DECIMAL(38,6) NOT NULL,
+	`BudgetAmountTC`  DECIMAL(32,6) NOT NULL,
+	`BudgetAmountAC`  DECIMAL(38,6) NOT NULL,
+	`BudgetAmountRC`  DECIMAL(38,6) NOT NULL,
+	`BudgetAmountGC`  DECIMAL(38,6) NOT NULL,
+	`BudgetAmountAC_Budget`  DECIMAL(38,6) NOT NULL,
+	`BudgetAmountRC_Budget`  DECIMAL(38,6) NOT NULL,
+	`BudgetAmountGC_Budget`  DECIMAL(38,6) NOT NULL,
+	`AppliedExchangeRateTC`  DECIMAL(38,6) ,
+	`AppliedExchangeRateRC`  DECIMAL(38,21) NOT NULL,
+	`AppliedExchangeRateAC`  DECIMAL(38,21) NOT NULL,
+	`AppliedExchangeRateGC`  DECIMAL(38,21) NOT NULL,
+	`AppliedExchangeRateRC_Budget`  DECIMAL(38,21) NOT NULL,
+	`AppliedExchangeRateAC_Budget`  DECIMAL(38,21) NOT NULL,
+	`AppliedExchangeRateGC_Budget`  DECIMAL(38,21) NOT NULL
+)
+;

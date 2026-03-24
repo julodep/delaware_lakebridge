@@ -1,0 +1,12 @@
+/****** Object:  Table [DWH].[DimIsOpenAmount]    Script Date: 03/03/2026 16:26:09 ******/
+
+
+
+CREATE OR REPLACE TABLE `DWH`.`DimIsOpenAmount`(
+	`DimIsOpenAmountId` `BOOLEAN` NOT NULL,
+ CONSTRAINT `PK_DimIsOpenAmount` PRIMARY KEY CLUSTERED 
+(
+	`DimIsOpenAmountId` ASC
+)WITH(STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+;
