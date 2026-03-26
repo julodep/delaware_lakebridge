@@ -1,19 +1,19 @@
-# Environnement virtuel (très important)
 .venv/
 venv/
 ENV/
 
-# Caches Python
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Dossiers spécifiques aux Notebooks
 .ipynb_checkpoints/
 
-# Ton dossier de données locales (si lakebridge contient tes CSV/Excel)
 lakebridge/
 
-# Fichiers système
+CustomerBackup_scripts/
+CustomerBackup_subscripts/
+switch_scripts/
+switch_scripts_views/
+
 .DS_Store
 Thumbs.db
