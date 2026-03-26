@@ -4,16 +4,17 @@ This repository contains scripts, notebooks, and outputs related to the analysis
 
 ## Project Structure
 
-.
-├── .assistant/                         # Internal assistant / config files
-├── .lakebridge/                        # Lakebridge configuration files (from Databricks workspace)
-├── analyzer_results/                   # Output from Lakebridge Analyzer on CustomerBackup
-├── diverse_codes/                      # Miscellaneous scripts and experiments
-├── doc/                                # Documentation: roadmap to follow
-├── switch_runs/                        # Output of the Switch LLM transpiler tool on CustomerBackup using various scripts/configurations
-├── transpiler-bladebridge-output/      # Output from SQL transpilation (Bladebridge) on CustomerBackup
-├── .gitignore                          # Ignored files (venv, cache, system files, backups)
-├── Lakebridge Switch Table Explorer.ipynb  # Notebook for analyzing Switch outputs (from Databricks workspace)
-├── README.md                           # Project documentation
+## Project Structure
 
+- **.assistant/** — Internal assistant / config files  
+- **.lakebridge/** — Lakebridge config (Databricks workspace)  
+- **analyzer_results/** — Analyzer outputs (CustomerBackup)  
+- **diverse_codes/** — Misc scripts & experiments  
+- **doc/** — Documentation / roadmap  
+- **switch_runs/** — Switch LLM transpiler outputs  
+- **transpiler-bladebridge-output/** — Bladebridge transpilation outputs  
+- **.gitignore** — Ignored files (venv, cache, system files)  
+- **Lakebridge Switch Table Explorer.ipynb** — Analysis notebook  
+- **README.md** — Documentation
+  
 Refer to the documentation for step-by-step instructions and detailed explanations of these tools.
