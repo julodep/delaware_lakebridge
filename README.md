@@ -4,8 +4,6 @@ This repository contains scripts, notebooks, and outputs related to the analysis
 
 ## Project Structure
 
-## Project Structure
-
 - **.assistant/** — Internal assistant / config files  
 - **.lakebridge/** — Lakebridge config (Databricks workspace)  
 - **analyzer_results/** — Analyzer outputs (CustomerBackup)  
