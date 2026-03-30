@@ -3,8 +3,13 @@ system_message: |
 
   # Input and Output
   - Input: A single SQL file containing one or multiple T-SQL statements (including but not limited to `CREATE OR ALTER PROCEDURE` statements).
-  - Output: Python code targeting catalog `dbe_dbx_internships` and schema `switchschema` with Python comments (in {comment_lang}) explaining the code and any necessary context. Any reference in the code to any table, view, function or store procedure should follow: dbe_dbx_internships.switchschema.{table}.
-
+  - Output:Python code targeting catalog `dbe_dbx_internships` and schema `switchschema`.
+    All database object references must follow the fully-qualified format
+    `dbe_dbx_internships.switchschema.{object_name}` — no reference to the
+    source MSSQL catalog or schema (like ETL, or dbo for example) may appear anywhere in the output.
+    Code must include Python comments in {comment_lang} explaining the logic
+    and any relevant translation context.
+    
   ${common_python_instructions_and_guidelines}
 
   # T-SQL Specific Guidelines
@@ -69,6 +74,12 @@ system_message: |
   - `INDEX` definitions (`CLUSTERED` / `NONCLUSTERED`) => Not supported in Delta Lake. Comment out.
   - Bracketed Identifiers: `[schema].[table]` => `schema.table` or `schema`.`table` (Spark SQL doesn’t support square brackets)
   - T-SQL Variables: `@VariableName` => Switch to Pythonic variables or f-string placeholders.
+  - When translating CREATE FUNCTION statements, you MUST distinguish between:
+    - If RETURNS <scalar_type> (INT, BIGINT, VARCHAR, DATE, TIMESTAMP, BOOLEAN, FLOAT, …)
+        → use `RETURN <expression>` (no AS, no SELECT)
+    - If RETURNS TABLE
+        → use `RETURN TABLE ( SELECT … )`
+    See fewshot example 4
 
 few_shots:
 # Example 1: Basic Queries with Temporary Tables
@@ -249,3 +260,163 @@ few_shots:
     # Show final result
     final_df = spark.sql(f"SELECT * FROM dbe_dbx_internships.switchschema.Products WHERE ProductID = {product_id}")
     display(final_df)
+
+# Example 4: Returning Table Fucntion
+- role: user
+  content: |
+    CREATE OR ALTER FUNCTION myschema.fn_getallocationdata
+    (
+        @paramSnapshotStart  BIGINT,
+        @paramSector         NVARCHAR(100)
+    )
+    RETURNS TABLE
+    AS
+    RETURN
+    (
+        WITH
+
+        -- 1. Authorised users
+        CurrentDGO AS (
+            SELECT DISTINCT DGO
+            FROM   myschema.dwh.factreportuserpermissions
+            WHERE  UserPrincipalName = SYSTEM_USER
+        ),
+
+        -- 2. Source with normalised ODS mapping
+        DataMapped AS (
+            SELECT
+                F.*,
+                UPPER(LTRIM(RTRIM(
+                    CASE F.ODSSource
+                        WHEN 'fluv' THEN 'FLUVIUS'
+                        WHEN 'sibe' THEN 'SIBELGA'
+                        WHEN 'ores' THEN 'ORES'
+                        ELSE F.ODSSource
+                    END
+                ))) AS ODSSource_Normalized
+            FROM myschema.allocation.Allocation F
+        )
+
+        SELECT
+            F.ODSSource,
+            F.AllocationMonth,
+            F.DGOName,
+            F.Sector,
+            CASE F.Sector
+                WHEN 'Gas'         THEN 'SE PI 6'
+                WHEN 'Electricity' THEN 'SE PI 5'
+            END                                             AS PIId,
+            CASE WHEN F.AllocationRunId IS NULL THEN 1 ELSE 0 END AS Missing
+
+        FROM       DataMapped F
+        INNER JOIN CurrentDGO C ON F.DGOName = C.DGO
+
+        WHERE
+            F.FirstRun = 1
+            AND @paramSnapshotStart <= CAST(FORMAT(F.Date, 'yyyyMMddHHmmss') AS BIGINT)
+            AND F.Sector = @paramSector
+    );
+
+- role: assistant
+  content: |
+    # Table-Valued Function: fn_getallocationdata
+    # Translated from MSSQL inline TVF to a Databricks SQL function + notebook test cell
+
+    # --- Function definition ---
+    # Widgets for parameters
+    dbutils.widgets.text("paramSnapshotStart", "20240101000000")
+    dbutils.widgets.text("paramSector", "Electricity")
+
+    # Convert inputs
+    param_snapshot_start = int(dbutils.widgets.get("paramSnapshotStart"))
+    param_sector = dbutils.widgets.get("paramSector")
+
+    # --- Register the function in the target schema ---
+    spark.sql("""
+    CREATE OR REPLACE FUNCTION myschema.fn_getallocationdata (
+        _paramSnapshotStart  BIGINT,
+        _paramSector         STRING
+    )
+    RETURNS TABLE (
+        ODSSource       STRING,
+        AllocationMonth STRING,
+        DGOName         STRING,
+        Sector          STRING,
+        PIId            STRING,
+        Missing         INT
+    )
+    RETURN (
+
+      WITH
+
+      -- 1. Authorised users
+      CurrentDGO AS (
+        SELECT DISTINCT DGO
+        FROM   myschema.dwh.factreportuserpermissions
+        WHERE  UserPrincipalName = current_user()
+      ),
+
+      -- 2. Source with normalised ODS mapping
+      DataMapped AS (
+        SELECT
+            F.*,
+            UPPER(TRIM(
+                CASE F.ODSSource
+                    WHEN 'fluv' THEN 'FLUVIUS'
+                    WHEN 'sibe' THEN 'SIBELGA'
+                    WHEN 'ores' THEN 'ORES'
+                    ELSE F.ODSSource
+                END
+            )) AS ODSSource_Normalized
+        FROM myschema.allocation.Allocation F
+      )
+
+      SELECT
+          F.ODSSource,
+          F.AllocationMonth,
+          F.DGOName,
+          F.Sector,
+          CASE F.Sector
+              WHEN 'Gas'         THEN 'SE PI 6'
+              WHEN 'Electricity' THEN 'SE PI 5'
+          END                                           AS PIId,
+          CASE WHEN F.AllocationRunId IS NULL THEN 1 ELSE 0 END AS Missing
+
+      FROM       DataMapped F
+      NATURAL INNER JOIN CurrentDGO
+
+      WHERE
+          F.FirstRun = 1
+          AND _paramSnapshotStart <= BIGINT(date_format(F.Date, 'yyyyMMddHHmmss'))
+          AND F.Sector = _paramSector
+
+    )
+    """)
+
+# Example 5: Int returning Function
+- role: user
+  content: |
+    CREATE FUNCTION `ETL`.`fn_TimeKeyInt`
+    (
+        -- Add the parameters for the function here
+        V_Time TIMESTAMP
+    )
+    RETURNS int
+    AS
+
+
+    RETURN CAST(CAST(EXTRACT(HOUR from V_Time) AS STRING)+ LEFT('0' || CAST(EXTRACT(MI from V_Time) AS STRING),2) AS INT)
+    ;
+
+- role: assistant
+  content: |
+    spark.sql("""
+    CREATE OR REPLACE FUNCTION dbe_dbx_internships.switchschema.fn_TimeKeyInt( V_Time TIMESTAMP )
+    RETURNS INT
+    RETURN CAST(
+            CONCAT(
+                EXTRACT(HOUR FROM V_Time),
+                LPAD(CAST(EXTRACT(MINUTE FROM V_Time) AS STRING), 2, '0')
+            ) AS INT)
+    """)
+

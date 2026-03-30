@@ -11,7 +11,7 @@ concurrency: 4
 max_fix_attempts: 1
 
 # Optional Parameters
-conversion_prompt_yaml: "/Workspace/Users/depoplimontj@delawareconsulting.com/.lakebridge/switch/resources/builtin_prompts/custom_prompt.yml"
+conversion_prompt_yaml: "/Workspace/Users/depoplimontj@delawareconsulting.com/delaware_lakebridge/.lakebridge/switch/resources/builtin_prompts/custom_prompt.yml"
 output_extension:
 sql_output_dir:
 request_params:

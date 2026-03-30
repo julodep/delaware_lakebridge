@@ -12,7 +12,7 @@ class ConfigLoader:
     """Load Switch and Lakebridge workspace configuration."""
 
     _SWITCH_DEFAULT_CONFIG_PATH = Path(__file__).parent.parent.parent.parent / "resources" / "switch_config.yml"
-    _LAKEBRIDGE_CONFIG_PATH_TPL = "/Workspace/Users/{user}/.lakebridge/config.yml"
+    _LAKEBRIDGE_CONFIG_PATH_TPL = "/Workspace/Users/{user}/delaware_lakebridge/.lakebridge/config.yml"
 
     def __init__(self, ws: WorkspaceClient):
         self._ws = ws
