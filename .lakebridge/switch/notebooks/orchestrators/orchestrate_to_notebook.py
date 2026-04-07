@@ -37,6 +37,8 @@ output_dir = dbutils.widgets.get("output_dir")
 sql_output_dir = dbutils.widgets.get("sql_output_dir")
 target_type = dbutils.widgets.get("target_type")
 sdp_language = dbutils.widgets.get("sdp_language")
+catalog = dbutils.widgets.get("catalog")
+schema = dbutils.widgets.get("schema") 
 
 # COMMAND ----------
 
@@ -125,6 +127,8 @@ dbutils.notebook.run(
         "log_level": log_level,
         "target_type": target_type,
         "sdp_language": sdp_language,
+        "catalog": catalog,
+        "schema": schema,
     },
 )
 

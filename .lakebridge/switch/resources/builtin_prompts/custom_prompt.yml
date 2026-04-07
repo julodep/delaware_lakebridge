@@ -1,16 +1,17 @@
 system_message: |
+
   Convert T-SQL code to Python code that runs on Databricks according to the following instructions and guidelines:
 
   # Input and Output
   - Input: A single SQL file containing one or multiple T-SQL statements (including but not limited to `CREATE OR ALTER PROCEDURE` statements).
-  - Output:Python code targeting catalog `dbe_dbx_internships` and schema `switchschema`.
+  - Output:
+    Python code targeting catalog {catalog} and schema {schema}.
     All database object references must follow the fully-qualified format
-    `dbe_dbx_internships.switchschema.{object_name}` — no reference to the
-    source MSSQL catalog or schema (like ETL, or dbo for example) may appear anywhere in the output.
-    Code must include Python comments in {comment_lang} explaining the logic
-    and any relevant translation context.
+    `{catalog}`.`{schema}`.`{object_name}`.
     
-  ${common_python_instructions_and_guidelines}
+    Code must include Python comments in {comment_lang} explaining the logic and any relevant translation context.
+    In the case of transpiling a SQL function, the generated notebook MUST produce a **persistent** function in Unity Catalog,  Do NOT call spark.udf.register().
+    NEVER USE double curly braces {{}}
 
   # T-SQL Specific Guidelines
   ## 1. Function Mapping:
@@ -72,14 +73,22 @@ system_message: |
   - `DECLARE @var...`, `SET @var = ...` => Not supported. Use Python variables or Databricks widgets instead.
   - Query Hints (e.g., `OPTION(MAXDOP=1)`, `WITH(NOLOCK)`) => Not supported. Comment out.
   - `INDEX` definitions (`CLUSTERED` / `NONCLUSTERED`) => Not supported in Delta Lake. Comment out.
-  - Bracketed Identifiers: `[schema].[table]` => `schema.table` or `schema`.`table` (Spark SQL doesn’t support square brackets)
+  - Bracketed Identifiers: `[schema].[table]` => `schema.table` or `schema`.`table` (Spark SQL doesn't support square brackets)
   - T-SQL Variables: `@VariableName` => Switch to Pythonic variables or f-string placeholders.
-  - When translating CREATE FUNCTION statements, you MUST distinguish between:
-    - If RETURNS <scalar_type> (INT, BIGINT, VARCHAR, DATE, TIMESTAMP, BOOLEAN, FLOAT, …)
-        → use `RETURN <expression>` (no AS, no SELECT)
-    - If RETURNS TABLE
-        → use `RETURN TABLE ( SELECT … )`
-    See fewshot example 4
+  # CRITICAL RULE
+  - description: When translating CREATE FUNCTION statements
+    syntax: |
+      CREATE [OR REPLACE] [TEMPORARY] FUNCTION [IF NOT EXISTS]
+      function_name ( [ function_parameter [, ...] ] )
+      { [ RETURNS data_type ] |
+        RETURNS TABLE [ ( column_spec [, ...]) ] }
+      [ characteristic [...] ]
+      { AS dollar_quoted_string | RETURN { expression | query } }
+    rules:
+      - ALWAYS end with:     RETURN ( ... ) or RETURN expression
+      - NEVER use:           AS $$ ... $$
+      - NEVER use:           RETURN AS
+      - NEVER use:           AS dollar_quoted_string
 
 few_shots:
 # Example 1: Basic Queries with Temporary Tables
@@ -98,9 +107,9 @@ few_shots:
         c.FirstName + ' ' + c.LastName AS CustomerName,
         SUM(oi.Price * oi.Quantity) AS TotalAmount,
         o.OrderDate
-    FROM dbe_dbx_internships.switchschema.Orders o
-    JOIN dbe_dbx_internships.switchschema.Customers c ON o.CustomerID = c.CustomerID
-    JOIN dbe_dbx_internships.switchschema.OrderItems oi ON o.OrderID = oi.OrderID
+    FROM {catalog}.{schema}.Orders o
+    JOIN {catalog}.{schema}.Customers c ON o.CustomerID = c.CustomerID
+    JOIN {catalog}.{schema}.OrderItems oi ON o.OrderID = oi.OrderID
     WHERE o.OrderDate > DATEADD(MONTH, -3, GETDATE())
     GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate;
 
@@ -112,7 +121,7 @@ few_shots:
   content: |
     # Create a temporary table in the target schema (using OR REPLACE to avoid conflicts)
     spark.sql("""
-    CREATE OR REPLACE TABLE dbe_dbx_internships.switchschema.RecentOrders (
+    CREATE OR REPLACE TABLE `{catalog}`.`{schema}`.`RecentOrders` (
         OrderID INT,
         CustomerName STRING,
         TotalAmount DECIMAL(10,2),
@@ -122,15 +131,15 @@ few_shots:
 
     # Populate the temporary table
     spark.sql("""
-    INSERT INTO dbe_dbx_internships.switchschema.RecentOrders
+    INSERT INTO `{catalog}`.`{schema}`.`RecentOrders`
     SELECT 
         o.OrderID,
         concat_ws(' ', c.FirstName, c.LastName) AS CustomerName,
         SUM(oi.Price * oi.Quantity) AS TotalAmount,
         o.OrderDate
-    FROM dbe_dbx_internships.switchschema.Orders o
-    JOIN dbe_dbx_internships.switchschema.Customers c ON o.CustomerID = c.CustomerID
-    JOIN dbe_dbx_internships.switchschema.OrderItems oi ON o.OrderID = oi.OrderID
+    FROM `{catalog}`.`{schema}`.`Orders` o
+    JOIN `{catalog}`.`{schema}`.`Customers` c ON o.CustomerID = c.CustomerID
+    JOIN `{catalog}`.`{schema}`.`OrderItems` oi ON o.OrderID = oi.OrderID
     WHERE o.OrderDate > date_add(current_date(), -90)
     GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate
     """)
@@ -138,7 +147,7 @@ few_shots:
     # Query for top customers
     top_customers = spark.sql("""
     SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
-    FROM dbe_dbx_internships.switchschema.RecentOrders
+    FROM `{catalog}`.`{schema}`.`RecentOrders`
     GROUP BY CustomerName
     ORDER BY TotalSpent DESC
     LIMIT 10
@@ -148,7 +157,7 @@ few_shots:
     display(top_customers)
 
     # Explicitly drop the temporary equivalent table
-    spark.sql("DROP TABLE IF EXISTS dbe_dbx_internships.switchschema.RecentOrders")
+    spark.sql("DROP TABLE IF EXISTS `{catalog}`.`{schema}`.`RecentOrders`")
 
 # Example 2: Stored Procedure
 - role: user
@@ -160,17 +169,17 @@ few_shots:
     BEGIN
         SET NOCOUNT ON;
 
-        IF NOT EXISTS (SELECT 1 FROM dbe_dbx_internships.switchschema.Products WHERE ProductID = @ProductID)
+        IF NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.Products WHERE ProductID = @ProductID)
         BEGIN
             PRINT 'Product not found';
             RETURN;
         END
 
-        UPDATE dbe_dbx_internships.switchschema.Products
+        UPDATE {catalog}.{schema}.Products
         SET Price = @NewPrice
         WHERE ProductID = @ProductID;
 
-        SELECT * FROM dbe_dbx_internships.switchschema.Products WHERE ProductID = @ProductID;
+        SELECT * FROM {catalog}.{schema}.Products WHERE ProductID = @ProductID;
     END;
 - role: assistant
   content: |
@@ -187,20 +196,20 @@ few_shots:
         dbutils.notebook.exit("Error")
 
     # Check if product exists
-    exists_df = spark.sql(f"SELECT 1 FROM dbe_dbx_internships.switchschema.Products WHERE ProductID = {product_id}")
+    exists_df = spark.sql(f"SELECT 1 FROM `{catalog}`.`{schema}`.`Products` WHERE ProductID = {product_id}")
     if exists_df.count() == 0:
         print("Product not found.")
         dbutils.notebook.exit("No such product.")
 
     # Update price
     spark.sql(f"""
-    UPDATE dbe_dbx_internships.switchschema.Products
+    UPDATE `{catalog}`.`{schema}`.`Products`
     SET Price = {new_price}
     WHERE ProductID = {product_id}
     """)
 
     # Return updated product
-    updated_df = spark.sql(f"SELECT * FROM dbe_dbx_internships.switchschema.Products WHERE ProductID = {product_id}")
+    updated_df = spark.sql(f"SELECT * FROM `{catalog}`.`{schema}`.`Products` WHERE ProductID = {product_id}")
     display(updated_df)
 
 # Example 3: Stored Procedure with Transaction Handling
@@ -213,7 +222,7 @@ few_shots:
     BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
-            UPDATE dbe_dbx_internships.switchschema.Products
+            UPDATE {catalog}.{schema}.Products
             SET Price = @NewPrice
             WHERE ProductID = @ProductID;
             COMMIT TRANSACTION;
@@ -223,7 +232,7 @@ few_shots:
             THROW;
         END CATCH
 
-        SELECT * FROM dbe_dbx_internships.switchschema.Products WHERE ProductID = @ProductID;
+        SELECT * FROM {catalog}.{schema}.Products WHERE ProductID = @ProductID;
     END;
 - role: assistant
   content: |
@@ -237,7 +246,7 @@ few_shots:
 
     # Capture the current timestamp for rollback
     try:
-        hist = spark.sql("DESCRIBE HISTORY dbe_dbx_internships.switchschema.Products LIMIT 1").collect()[0]
+        hist = spark.sql("DESCRIBE HISTORY `{catalog}`.`{schema}`.`Products` LIMIT 1").collect()[0]
         restore_ts = hist["timestamp"]
     except:
         restore_ts = None
@@ -245,7 +254,7 @@ few_shots:
     try:
         # Perform the update
         spark.sql(f"""
-        UPDATE dbe_dbx_internships.switchschema.Products
+        UPDATE `{catalog}`.`{schema}`.`Products`
         SET Price = {new_price}
         WHERE ProductID = {product_id}
         """)
@@ -253,15 +262,15 @@ few_shots:
     except Exception as e:
         # Rollback via restore if available
         if restore_ts is not None:
-            spark.sql(f"RESTORE TABLE dbe_dbx_internships.switchschema.Products TO TIMESTAMP AS OF '{restore_ts}'")
+            spark.sql(f"RESTORE TABLE `{catalog}`.`{schema}`.`Products` TO TIMESTAMP AS OF '{restore_ts}'")
             print("Table restored to previous version.")
         raise e
 
     # Show final result
-    final_df = spark.sql(f"SELECT * FROM dbe_dbx_internships.switchschema.Products WHERE ProductID = {product_id}")
+    final_df = spark.sql(f"SELECT * FROM `{catalog}`.`{schema}`.`Products` WHERE ProductID = {product_id}")
     display(final_df)
 
-# Example 4: Returning Table Fucntion
+# Example 4: Function that returns a table
 - role: user
   content: |
     CREATE OR ALTER FUNCTION myschema.fn_getallocationdata
@@ -319,21 +328,8 @@ few_shots:
 
 - role: assistant
   content: |
-    # Table-Valued Function: fn_getallocationdata
-    # Translated from MSSQL inline TVF to a Databricks SQL function + notebook test cell
-
-    # --- Function definition ---
-    # Widgets for parameters
-    dbutils.widgets.text("paramSnapshotStart", "20240101000000")
-    dbutils.widgets.text("paramSector", "Electricity")
-
-    # Convert inputs
-    param_snapshot_start = int(dbutils.widgets.get("paramSnapshotStart"))
-    param_sector = dbutils.widgets.get("paramSector")
-
-    # --- Register the function in the target schema ---
     spark.sql("""
-    CREATE OR REPLACE FUNCTION myschema.fn_getallocationdata (
+    CREATE OR REPLACE FUNCTION `myschema`.`fn_getallocationdata` (
         _paramSnapshotStart  BIGINT,
         _paramSector         STRING
     )
@@ -352,7 +348,7 @@ few_shots:
       -- 1. Authorised users
       CurrentDGO AS (
         SELECT DISTINCT DGO
-        FROM   myschema.dwh.factreportuserpermissions
+        FROM   `myschema`.`dwh`.`factreportuserpermissions`
         WHERE  UserPrincipalName = current_user()
       ),
 
@@ -368,7 +364,7 @@ few_shots:
                     ELSE F.ODSSource
                 END
             )) AS ODSSource_Normalized
-        FROM myschema.allocation.Allocation F
+        FROM `myschema`.`allocation`.`Allocation` F
       )
 
       SELECT
@@ -411,7 +407,7 @@ few_shots:
 - role: assistant
   content: |
     spark.sql("""
-    CREATE OR REPLACE FUNCTION dbe_dbx_internships.switchschema.fn_TimeKeyInt( V_Time TIMESTAMP )
+    CREATE OR REPLACE FUNCTION `{catalog}`.`{schema}`.`fn_TimeKeyInt`( V_Time TIMESTAMP )
     RETURNS INT
     RETURN CAST(
             CONCAT(
@@ -420,3 +416,26 @@ few_shots:
             ) AS INT)
     """)
 
+
+# Example 6: Simple function returning a table
+- role: user
+  content: |
+    CREATE FUNCTION dbo.get_orders(@customer_id INT)
+    RETURNS TABLE
+    AS
+    RETURN
+    SELECT order_id, order_date, total
+    FROM orders
+    WHERE customer_id = @customer_id
+
+- role: assistant
+  content: |
+    spark.sql("""
+    CREATE OR REPLACE FUNCTION `{catalog}`.`{schema}`.`get_orders`(customer_id INT)
+    RETURNS TABLE (order_id INT, order_date DATE, total DOUBLE)
+    RETURN (
+        SELECT order_id, order_date, total
+        FROM `{catalog}`.`{schema}`.`orders`
+        WHERE customer_id = customer_id
+    )
+    """)

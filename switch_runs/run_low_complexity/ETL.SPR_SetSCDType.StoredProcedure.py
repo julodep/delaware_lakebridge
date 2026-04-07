@@ -41,7 +41,7 @@ full_table_name = f"{catalog_name}.{schema_name}.{table_name}"
 
 # ------------------------------------------------------------
 # NOTE:
-# The original T‑SQL procedure adds an extended property named 'SCDType'
+# The original T-SQL procedure adds an extended property named 'SCDType'
 # to each column via sp_addextendedproperty. Databricks Delta Lake does not
 # support SQL Server extended properties. As an alternative, we annotate
 # each column with a comment that includes the SCD type.
@@ -57,7 +57,7 @@ SELECT
     column_name,
     table_name,
     table_schema
-FROM information_schema.columns
+FROM {catalog_name}.information_schema.columns
 WHERE table_name = '{table_name}'
   AND table_schema = '{schema_name}'
 """)
@@ -113,6 +113,32 @@ except Exception as e:
 # Spark's DESCRIBE EXTENDED shows column comments.
 verification_df = spark.sql(f"DESCRIBE EXTENDED {full_table_name}")
 display(verification_df)
+
+# COMMAND ----------
+
+spark.sql("""
+CREATE OR REPLACE TABLE dbe_dbx_internships.switchschema.TestSCDTable (
+    TestSCDTableId      INT,
+    CustomerName        STRING,
+    Email               STRING,
+    Region              STRING,
+    CreatedETLRunId     INT,
+    ModifiedETLRunId    INT,
+    SCDStartDate        DATE,
+    SCDEndDate          DATE,
+    SCDIsCurrent        BOOLEAN
+)
+""")
+
+spark.sql("""
+INSERT INTO dbe_dbx_internships.switchschema.TestSCDTable VALUES
+  (1, 'Alice',   'alice@example.com',   'EMEA',  100, 100, '2025-01-01', '9999-12-31', true),
+  (2, 'Bob',     'bob@example.com',     'APAC',  101, 102, '2025-03-15', '9999-12-31', true),
+  (3, 'Charlie', 'charlie@example.com', 'AMER',  101, 103, '2025-06-01', '2025-12-31', false),
+  (3, 'Charlie', 'charlie_new@example.com', 'AMER', 101, 104, '2026-01-01', '9999-12-31', true)
+""")
+
+display(spark.sql("SELECT * FROM dbe_dbx_internships.switchschema.TestSCDTable"))
 
 # COMMAND ----------
 

@@ -26,7 +26,7 @@ def SPR_SetSCDType(schema_name: str, table_name: str):
     in the column COMMENT field of the Delta table.
     """
     # Build the fully‑qualified table name: dbe_dbx_internships.switchschema.{schema_name}.{table_name}
-    full_table = f"dbe_dbx_internships.switchschema.{schema_name}.{table_name}"
+    full_table = f"dbe_dbx_internships.{schema_name}.{table_name}"
 
     # --------------------------------------------------
     # Retrieve column metadata using the catalog API
@@ -110,7 +110,7 @@ except Exception as err:
 # --------------------------------------------------
 try:
     updated_schema_df = spark.sql(
-        f"DESCRIBE `{f'dbe_dbx_internships.switchschema.{schema_name_input}.{table_name_input}'}`"
+        f"DESCRIBE dbe_dbx_internships.{schema_name_input}.{table_name_input}"
     )
     display(updated_schema_df)
 except Exception as e:

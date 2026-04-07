@@ -43,8 +43,8 @@ from pyscripts.parameters.models import LakebridgeConfig
 # COMMAND ----------
 
 # DBTITLE 1,Get Runtime Parameters
-input_dir = "/Volumes/dbe_dbx_internships/switchschema/switchvolume/switch_scripts_functions"
-output_dir = "/Workspace/Users/depoplimontj@delawareconsulting.com/delaware_lakebridge/switch_runs/run10"
+input_dir = "/Volumes/dbe_dbx_internships/switchschema/switchvolume/baseline_scripts_high/"
+output_dir = "/Workspace/Users/depoplimontj@delawareconsulting.com/delaware_lakebridge/switch_runs/run_high"
 source_tech = "mssql"
 catalog = "dbe_dbx_internships"
 schema = "switchschema"

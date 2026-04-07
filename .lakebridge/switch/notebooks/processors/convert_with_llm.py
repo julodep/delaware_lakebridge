@@ -111,6 +111,9 @@ config_request_params = json.loads(_request_params) if _request_params.strip() e
 # COMMAND ----------
 
 # DBTITLE 1,Load System Message and Few-Shots
+catalog = dbutils.widgets.get("catalog")
+schema = dbutils.widgets.get("schema") 
+
 conv_prompt_helper = ConversionPromptHelper(
     yaml_path=config_conversion_prompt_yaml,
     comment_lang=config_comment_lang,

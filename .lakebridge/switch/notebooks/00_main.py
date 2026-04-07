@@ -5,6 +5,10 @@
 
 # COMMAND ----------
 
+
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## 1. Set Up Configuration Parameters
 # MAGIC Major configuration parameters are set up in this section.
@@ -149,6 +153,8 @@ if params.target_type in [TargetType.NOTEBOOK.value, TargetType.SDP.value]:
             "sql_output_dir": params.sql_output_dir or "",
             "target_type": params.target_type,
             "sdp_language": params.sdp_language or "",
+            "catalog": catalog,
+            "schema": schema,
         },
     )
     print("Notebook conversion completed.")
