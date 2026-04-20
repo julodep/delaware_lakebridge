@@ -513,6 +513,7 @@ class AsyncChatClient:
         if isinstance(content, str):
             return content
         if isinstance(content, list):
+            print(f"DEBUG content types: {[p.get('type') for p in content]}")
             return "".join(
                 content_part.get("text", "") for content_part in content if content_part.get("type") == "text"
             )

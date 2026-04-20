@@ -17,3 +17,47 @@ sql_output_dir:
 request_params:
 # sdp_language is required when target_type is "sdp". Valid values: "python", "sql"
 sdp_language: "python" 
+
+# For second LLM call aiming to avoid ambiguitous
+llm:
+  system_prompt: "Your goal is to detect which catalog and schema to use by taking into account the PySpark/SQL notebook, the source .sql code and the business context."
+  content_excerpt_size: 4000
+
+business_context: |
+  Schemas are organized in layers — only entities from higher-layer schemas can call schemas from lower layers.
+
+  Here is the hierarchy:
+
+  1. dbo
+  2. staginghistoric
+  3. datastore / datastore{i} for i = 1 ... n
+  4. dwh
+  5. etl / ssas
+
+  datastore2 never calls a table from datastore3, datastore3 never calls a table from datastore4, and so on.
+
+  When two tables share the same name, the one referenced right after SELECT FROM will always be the one from the closest schema in the hierarchy.
+
+possible_pairs:
+  - catalog: "dbe_dbx_internships"
+    schema: "dbo"
+  - catalog: "dbe_dbx_internships"
+    schema: "datastore"
+  - catalog: "dbe_dbx_internships"
+    schema: "datastore1"
+  - catalog: "dbe_dbx_internships"
+    schema: "datastore2"
+  - catalog: "dbe_dbx_internships"
+    schema: "datastore3"
+  - catalog: "dbe_dbx_internships"
+    schema: "datastore4"
+  - catalog: "dbe_dbx_internships"
+    schema: "datastore5"
+  - catalog: "dbe_dbx_internships"
+    schema: "datastore6"
+  - catalog: "dbe_dbx_internships"
+    schema: "dwh"
+  - catalog: "dbe_dbx_internships"
+    schema: "etl"
+  - catalog: "dbe_dbx_internships"
+    schema: "ssas"

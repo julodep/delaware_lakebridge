@@ -142,7 +142,6 @@ input_sdf = spark.sql(
     f"""
     SELECT input_file_number, input_file_content_preprocessed
     FROM {config_result_table}
-    WHERE is_conversion_target = true
 """
 )
 display(input_sdf)
@@ -197,6 +196,8 @@ batch_manager = BatchInferenceManager(
 
 # DBTITLE 1,Batch Inference
 batch_inference_responses = await batch_manager.batch_inference(batch_inference_requests)
+for r in batch_inference_responses:
+    print(f"Index {r.index}: content={repr(r.content[:100]) if r.content else repr(r.content)}, error={r.error}")
 
 # COMMAND ----------
 
