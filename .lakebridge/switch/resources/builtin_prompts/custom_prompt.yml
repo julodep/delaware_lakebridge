@@ -7,7 +7,7 @@ system_message: |
   - Output:
     Python code targeting catalog {catalog} and schema {schema}.
     All database object references must follow the fully-qualified format
-    `{catalog}`.`{schema}`.`{object_name}`.
+    {catalog}.{schema}.{object_name}.
     
     Code must include Python comments in {comment_lang} explaining the logic and any relevant translation context.
     In the case of transpiling a SQL function, the generated notebook MUST produce a **persistent** function in Unity Catalog,  Do NOT call spark.udf.register().
@@ -121,7 +121,7 @@ few_shots:
   content: |
     # Create a temporary table in the target schema (using OR REPLACE to avoid conflicts)
     spark.sql("""
-    CREATE OR REPLACE TABLE `{catalog}`.`{schema}`.`RecentOrders` (
+    CREATE OR REPLACE TABLE {catalog}.{schema}.RecentOrders (
         OrderID INT,
         CustomerName STRING,
         TotalAmount DECIMAL(10,2),
@@ -131,15 +131,15 @@ few_shots:
 
     # Populate the temporary table
     spark.sql("""
-    INSERT INTO `{catalog}`.`{schema}`.`RecentOrders`
+    INSERT INTO {catalog}.{schema}.RecentOrders
     SELECT 
         o.OrderID,
         concat_ws(' ', c.FirstName, c.LastName) AS CustomerName,
         SUM(oi.Price * oi.Quantity) AS TotalAmount,
         o.OrderDate
-    FROM `{catalog}`.`{schema}`.`Orders` o
-    JOIN `{catalog}`.`{schema}`.`Customers` c ON o.CustomerID = c.CustomerID
-    JOIN `{catalog}`.`{schema}`.`OrderItems` oi ON o.OrderID = oi.OrderID
+    FROM {catalog}.{schema}.Orders o
+    JOIN {catalog}.{schema}.Customers c ON o.CustomerID = c.CustomerID
+    JOIN {catalog}.{schema}.OrderItems oi ON o.OrderID = oi.OrderID
     WHERE o.OrderDate > date_add(current_date(), -90)
     GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate
     """)
@@ -147,7 +147,7 @@ few_shots:
     # Query for top customers
     top_customers = spark.sql("""
     SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
-    FROM `{catalog}`.`{schema}`.`RecentOrders`
+    FROM {catalog}.{schema}.`RecentOrders`
     GROUP BY CustomerName
     ORDER BY TotalSpent DESC
     LIMIT 10
@@ -157,7 +157,7 @@ few_shots:
     display(top_customers)
 
     # Explicitly drop the temporary equivalent table
-    spark.sql("DROP TABLE IF EXISTS `{catalog}`.`{schema}`.`RecentOrders`")
+    spark.sql("DROP TABLE IF EXISTS {catalog}.{schema}.`RecentOrders`")
 
 # Example 2: Stored Procedure
 - role: user
@@ -196,20 +196,20 @@ few_shots:
         dbutils.notebook.exit("Error")
 
     # Check if product exists
-    exists_df = spark.sql(f"SELECT 1 FROM `{catalog}`.`{schema}`.`Products` WHERE ProductID = {product_id}")
+    exists_df = spark.sql(f"SELECT 1 FROM {catalog}.{schema}.Products WHERE ProductID = {product_id}")
     if exists_df.count() == 0:
         print("Product not found.")
         dbutils.notebook.exit("No such product.")
 
     # Update price
     spark.sql(f"""
-    UPDATE `{catalog}`.`{schema}`.`Products`
+    UPDATE {catalog}.{schema}.Products
     SET Price = {new_price}
     WHERE ProductID = {product_id}
     """)
 
     # Return updated product
-    updated_df = spark.sql(f"SELECT * FROM `{catalog}`.`{schema}`.`Products` WHERE ProductID = {product_id}")
+    updated_df = spark.sql(f"SELECT * FROM {catalog}.{schema}.Products WHERE ProductID = {product_id}")
     display(updated_df)
 
 # Example 3: Stored Procedure with Transaction Handling
@@ -246,7 +246,7 @@ few_shots:
 
     # Capture the current timestamp for rollback
     try:
-        hist = spark.sql("DESCRIBE HISTORY `{catalog}`.`{schema}`.`Products` LIMIT 1").collect()[0]
+        hist = spark.sql("DESCRIBE HISTORY {catalog}.{schema}.Products LIMIT 1").collect()[0]
         restore_ts = hist["timestamp"]
     except:
         restore_ts = None
@@ -254,7 +254,7 @@ few_shots:
     try:
         # Perform the update
         spark.sql(f"""
-        UPDATE `{catalog}`.`{schema}`.`Products`
+        UPDATE {catalog}.{schema}.Products
         SET Price = {new_price}
         WHERE ProductID = {product_id}
         """)
@@ -262,12 +262,12 @@ few_shots:
     except Exception as e:
         # Rollback via restore if available
         if restore_ts is not None:
-            spark.sql(f"RESTORE TABLE `{catalog}`.`{schema}`.`Products` TO TIMESTAMP AS OF '{restore_ts}'")
+            spark.sql(f"RESTORE TABLE {catalog}.{schema}.Products TO TIMESTAMP AS OF '{restore_ts}'")
             print("Table restored to previous version.")
         raise e
 
     # Show final result
-    final_df = spark.sql(f"SELECT * FROM `{catalog}`.`{schema}`.`Products` WHERE ProductID = {product_id}")
+    final_df = spark.sql(f"SELECT * FROM {catalog}.{schema}.Products WHERE ProductID = {product_id}")
     display(final_df)
 
 # Example 4: Function that returns a table
@@ -329,7 +329,7 @@ few_shots:
 - role: assistant
   content: |
     spark.sql("""
-    CREATE OR REPLACE FUNCTION `myschema`.`fn_getallocationdata` (
+    CREATE OR REPLACE FUNCTION myschema.fn_getallocationdata (
         _paramSnapshotStart  BIGINT,
         _paramSector         STRING
     )
@@ -348,7 +348,7 @@ few_shots:
       -- 1. Authorised users
       CurrentDGO AS (
         SELECT DISTINCT DGO
-        FROM   `myschema`.`dwh`.`factreportuserpermissions`
+        FROM   myschema.dwh.factreportuserpermissions
         WHERE  UserPrincipalName = current_user()
       ),
 
@@ -364,7 +364,7 @@ few_shots:
                     ELSE F.ODSSource
                 END
             )) AS ODSSource_Normalized
-        FROM `myschema`.`allocation`.`Allocation` F
+        FROM myschema.allocation.Allocation F
       )
 
       SELECT
@@ -392,7 +392,7 @@ few_shots:
 # Example 5: Int returning Function
 - role: user
   content: |
-    CREATE FUNCTION `ETL`.`fn_TimeKeyInt`
+    CREATE FUNCTION ETL.fn_TimeKeyInt
     (
         -- Add the parameters for the function here
         V_Time TIMESTAMP
@@ -407,7 +407,7 @@ few_shots:
 - role: assistant
   content: |
     spark.sql("""
-    CREATE OR REPLACE FUNCTION `{catalog}`.`{schema}`.`fn_TimeKeyInt`( V_Time TIMESTAMP )
+    CREATE OR REPLACE FUNCTION {catalog}.{schema}.fn_TimeKeyInt( V_Time TIMESTAMP )
     RETURNS INT
     RETURN CAST(
             CONCAT(
@@ -431,11 +431,11 @@ few_shots:
 - role: assistant
   content: |
     spark.sql("""
-    CREATE OR REPLACE FUNCTION `{catalog}`.`{schema}`.`get_orders`(customer_id INT)
+    CREATE OR REPLACE FUNCTION {catalog}.{schema}.get_orders(customer_id INT)
     RETURNS TABLE (order_id INT, order_date DATE, total DOUBLE)
     RETURN (
         SELECT order_id, order_date, total
-        FROM `{catalog}`.`{schema}`.`orders`
+        FROM {catalog}.{schema}.orders
         WHERE customer_id = customer_id
     )
     """)
