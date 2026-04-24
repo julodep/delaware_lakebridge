@@ -7,24 +7,14 @@
 
 # COMMAND ----------
 
-# Create table in the target schema
+# Create the table with the specified schema
 spark.sql("""
-CREATE TABLE IF NOT EXISTS ETL.`StagingMissingColumn` (
-    `TableName` STRING,
-    `ColumnName` STRING
+CREATE TABLE IF NOT EXISTS dbe_dbx_internships.ETL.StagingMissingColumn (
+    TableName STRING,
+    ColumnName STRING
 )
 USING delta
-LOCATION 'dbfs:/user/hive/warehouse/{catalog}/{schema}.db/StagingMissingColumn'
-""")
-
-# COMMAND ----------
-
-# Alternatively, if you want to create the table in the default location
-spark.sql("""
-CREATE TABLE IF NOT EXISTS ETL.`StagingMissingColumn` (
-    `TableName` STRING,
-    `ColumnName` STRING
-)
+LOCATION '/{catalog}/{schema}/StagingMissingColumn'
 """)
 
 # COMMAND ----------

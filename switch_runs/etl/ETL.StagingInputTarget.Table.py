@@ -7,22 +7,31 @@
 
 # COMMAND ----------
 
+# Create the table
 spark.sql("""
-CREATE TABLE IF NOT EXISTS ETL.`StagingInputTarget` (
-    `TargetName` STRING NOT NULL,
-    `TargetSchema` STRING NOT NULL,
-    `TargetTable` STRING NOT NULL,
-    `SourceSchema` STRING NOT NULL,
-    `SourceTable` STRING NOT NULL,
-    `PrimaryKey` STRING,
-    `ActionType` STRING NOT NULL DEFAULT 'Upsert',
-    `Category` STRING,
-    `Status` STRING NOT NULL DEFAULT 'ACTIVE',
-    `Description` STRING NOT NULL
+CREATE TABLE IF NOT EXISTS dbe_dbx_internships.ETL.StagingInputTarget (
+    TargetName          STRING NOT NULL,
+    TargetSchema        STRING NOT NULL,
+    TargetTable         STRING NOT NULL,
+    SourceSchema        STRING NOT NULL,
+    SourceTable         STRING NOT NULL,
+    PrimaryKey          STRING,
+    ActionType          STRING NOT NULL DEFAULT 'Upsert',
+    Category            STRING,
+    Status              STRING NOT NULL DEFAULT 'ACTIVE',
+    Description         STRING NOT NULL
 )
 USING delta
-PARTITIONED BY (`TargetName`, `TargetSchema`, `TargetTable`)
 LOCATION '/mnt/{catalog}/{schema}/StagingInputTarget'
+TBLPROPERTIES (delta.enableChangeDataFeed = true)
+""")
+
+# COMMAND ----------
+
+# Create primary key constraint
+spark.sql("""
+ALTER TABLE dbe_dbx_internships.ETL.StagingInputTarget
+ADD CONSTRAINT PK_StagingInputTarget PRIMARY KEY (TargetName, TargetSchema, TargetTable)
 """)
 
 # COMMAND ----------

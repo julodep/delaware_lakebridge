@@ -7,44 +7,33 @@
 
 # COMMAND ----------
 
-spark.sql("""
-CREATE TABLE IF NOT EXISTS ETL.`StagingInputTargetLookup` (
-    `TargetName` STRING NOT NULL,
-    `TargetSchema` STRING NOT NULL,
-    `TargetTable` STRING NOT NULL,
-    `LookupTableAlias` STRING NOT NULL,
-    `LookupSchema` STRING NOT NULL,
-    `LookupTable` STRING NOT NULL,
-    `LookupColumn` STRING NOT NULL,
-    `TargetColumn` STRING NOT NULL,
-    `SourceJoinColumns` STRING NOT NULL,
-    `LookupJoinColumns` STRING NOT NULL,
-    `Description` STRING
+# Fix the error by running the two SQL statements separately
+spark.sql(f"""
+CREATE TABLE IF NOT EXISTS dbe_dbx_internships.ETL.StagingInputTargetLookup (
+    TargetName        STRING NOT NULL,
+    TargetSchema      STRING NOT NULL,
+    TargetTable       STRING NOT NULL,
+    LookupTableAlias  STRING NOT NULL,
+    LookupSchema      STRING NOT NULL,
+    LookupTable       STRING NOT NULL,
+    LookupColumn      STRING NOT NULL,
+    TargetColumn      STRING NOT NULL,
+    SourceJoinColumns STRING NOT NULL,
+    LookupJoinColumns STRING NOT NULL,
+    Description       STRING
 )
 USING delta
-LOCATION '{catalog}/{schema}/StagingInputTargetLookup'
-TBLPROPERTIES (
-    'delta.enableChangeDataFeed' = 'true',
-    'delta.dataSkippingNumIndexBuckets' = '128'
-)
+LOCATION 'dbe_dbx_internships.ETL.StagingInputTargetLookup'
 """)
 
 # COMMAND ----------
 
-spark.sql("""
-CREATE TABLE IF NOT EXISTS ETL.`StagingInputTargetLookup` (
-    `TargetName` STRING NOT NULL,
-    `TargetSchema` STRING NOT NULL,
-    `TargetTable` STRING NOT NULL,
-    `LookupTableAlias` STRING NOT NULL,
-    `LookupSchema` STRING NOT NULL,
-    `LookupTable` STRING NOT NULL,
-    `LookupColumn` STRING NOT NULL,
-    `TargetColumn` STRING NOT NULL,
-    `SourceJoinColumns` STRING NOT NULL,
-    `LookupJoinColumns` STRING NOT NULL,
-    `Description` STRING
-)
+# Note that creating a unique index on a Delta table in Databricks is not directly supported.
+# However, we can use the UNIQUE constraint in the CREATE TABLE statement instead.
+# If you still want to create an index, you can use the following command to create a non-unique index.
+spark.sql(f"""
+CREATE INDEX IF NOT EXISTS PK_StagingInputTargetLookup
+ON dbe_dbx_internships.ETL.StagingInputTargetLookup (TargetName, TargetSchema, TargetTable, LookupTableAlias)
 """)
 
 # COMMAND ----------

@@ -11,7 +11,8 @@ system_message: |
     
     Code must include Python comments in {comment_lang} explaining the logic and any relevant translation context.
     In the case of transpiling a SQL function, the generated notebook MUST produce a **persistent** function in Unity Catalog,  Do NOT call spark.udf.register().
-    NEVER USE double curly braces {{}}
+    NEVER USE double curly braces {{}}.
+    NEVER USE LOCATION in CREATE statements
 
   # T-SQL Specific Guidelines
   ## 1. Function Mapping:

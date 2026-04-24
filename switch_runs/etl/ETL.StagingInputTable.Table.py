@@ -7,52 +7,69 @@
 
 # COMMAND ----------
 
-# Create table
+# Create the table
 spark.sql(f"""
-CREATE TABLE IF NOT EXISTS `catalog`.`schema`.`StagingInputTable` (
-    `SourceName` STRING NOT NULL,
-    `SourceSchema` STRING NOT NULL,
-    `SourceTable` STRING NOT NULL,
-    `TargetTable` STRING NOT NULL,
-    `PrimaryKey` STRING,
-    `WhereClause` STRING,
-    `DeltaWhereClause` STRING,
-    `Category` STRING,
-    `Status` STRING NOT NULL DEFAULT 'ACTIVE',
-    `Load` BOOLEAN NOT NULL,
-    `Rebuild` BOOLEAN NOT NULL,
-    `Description` STRING NOT NULL
-) USING delta
+CREATE TABLE IF NOT EXISTS dbe_dbx_internships.ETL.StagingInputTable (
+    SourceName        STRING NOT NULL,
+    SourceSchema      STRING NOT NULL,
+    SourceTable       STRING NOT NULL,
+    TargetTable       STRING NOT NULL,
+    PrimaryKey        STRING,
+    WhereClause       STRING,
+    DeltaWhereClause  STRING,
+    Category          STRING,
+    Status            STRING NOT NULL DEFAULT 'ACTIVE',
+    Load              BOOLEAN NOT NULL,
+    Rebuild           BOOLEAN NOT NULL,
+    Description       STRING NOT NULL
+)
+USING delta
+LOCATION '{catalog}/{schema}/StagingInputTable'
+TBLPROPERTIES (
+    'delta.autoOptimize.optimizeWrite' = 'true',
+    'delta.dataSkippingNumIndexBatches' = '10'
+)
 """)
 
 # COMMAND ----------
 
 # Create primary key constraint
 spark.sql(f"""
-ALTER TABLE `catalog`.`schema`.`StagingInputTable`
-ADD CONSTRAINT `PK_catalog_schema_StagingInputTable` PRIMARY KEY (`SourceName`, `SourceSchema`, `SourceTable`)
+ALTER TABLE dbe_dbx_internships.ETL.StagingInputTable
+ADD CONSTRAINT PK_StagingInputTable PRIMARY KEY (SourceName, SourceSchema, SourceTable)
 """)
 
 # COMMAND ----------
 
-# Drop unique constraint, as it is not directly supported in Databricks Delta Lake tables
-# Instead, you can create a CHECK constraint or handle uniqueness in your application logic
-#spark.sql(f"""
-#ALTER TABLE `catalog`.`schema`.`StagingInputTable`
-#ADD CONSTRAINT `UC_catalog_schema_StagingInputTable_SourceNameTargetTable` UNIQUE (`SourceName`, `TargetTable`)
-#""")
-
-# Alternatively, to enforce uniqueness, you can use CHECK constraint
+# Drop table and recreate with unique constraints in the initial CREATE TABLE statement
 spark.sql(f"""
-ALTER TABLE `catalog`.`schema`.`StagingInputTable`
-ADD CONSTRAINT `CK_catalog_schema_StagingInputTable_SourceNameTargetTable` CHECK (
-    `SourceName` IS NOT NULL AND `TargetTable` IS NOT NULL
-    AND NOT EXISTS (
-        SELECT 1
-        FROM `catalog`.`schema`.`StagingInputTable` t2
-        WHERE t2.`SourceName` = `SourceName` AND t2.`TargetTable` = `TargetTable`
-        AND t2.`SourceName` != `SourceName` OR t2.`TargetTable` != `TargetTable`
-    )
+DROP TABLE IF EXISTS dbe_dbx_internships.ETL.StagingInputTable
+""")
+
+# COMMAND ----------
+
+spark.sql(f"""
+CREATE TABLE IF NOT EXISTS dbe_dbx_internships.ETL.StagingInputTable (
+    SourceName        STRING NOT NULL,
+    SourceSchema      STRING NOT NULL,
+    SourceTable       STRING NOT NULL,
+    TargetTable       STRING NOT NULL,
+    PrimaryKey        STRING,
+    WhereClause       STRING,
+    DeltaWhereClause  STRING,
+    Category          STRING,
+    Status            STRING NOT NULL DEFAULT 'ACTIVE',
+    Load              BOOLEAN NOT NULL,
+    Rebuild           BOOLEAN NOT NULL,
+    Description       STRING NOT NULL,
+    CONSTRAINT PK_StagingInputTable PRIMARY KEY (SourceName, SourceSchema, SourceTable),
+    CONSTRAINT UC_StagingInputTable_SourceNameTargetTable UNIQUE (SourceName, TargetTable)
+)
+USING delta
+LOCATION '{catalog}/{schema}/StagingInputTable'
+TBLPROPERTIES (
+    'delta.autoOptimize.optimizeWrite' = 'true',
+    'delta.dataSkippingNumIndexBatches' = '10'
 )
 """)
 
@@ -60,5 +77,13 @@ ADD CONSTRAINT `CK_catalog_schema_StagingInputTable_SourceNameTargetTable` CHECK
 
 # MAGIC %md
 # MAGIC ## Static Syntax Check Results
-# MAGIC No syntax errors were detected during the static check.
-# MAGIC However, please review the code carefully as some issues may only be detected during runtime.
+# MAGIC These are errors from static syntax checks. Manual corrections are required for these errors.
+# MAGIC ### Spark SQL Syntax Errors
+# MAGIC ```
+# MAGIC Error in query 3: 
+# MAGIC Only PRIMARY KEY and FOREIGN KEY constraints are currently supported.
+# MAGIC == SQL (line 1, position 9) ==
+# MAGIC EXPLAIN CREATE TABLE IF NOT EXISTS _placeholder_._placeholder_.StagingInputTable (     SourceName        STRING NOT NULL,     SourceSchema      STRING NOT NULL,     SourceTable       STRING NOT NULL,     TargetTable       STRING NOT NULL,     PrimaryKey        STRING,     WhereClause       STRING,     DeltaWhereClause  STRING,     Category          STRING,     Status            STRING NOT NULL DEFAULT 'ACTIVE',     Load              BOOLEAN NOT NULL,     Rebuild           BOOLEAN NOT NULL,     Description       STRING NOT NULL,     CONSTRAINT PK_StagingInputTable PRIMARY KEY (SourceName, SourceSchema, SourceTable),     CONSTRAINT UC_StagingInputTable_SourceNameTargetTable UNIQUE (SourceName, TargetTable) ) USING delta LOCATION '_placeholder_/_placeholder_/StagingInputTable' TBLPROPERTIES (     'delta.autoOptimize.optimizeWrite' = 'true',     'delta.dataSkippingNumIndexBatches' = '10' )
+# MAGIC         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# MAGIC
+# MAGIC ```

@@ -7,14 +7,12 @@
 
 # COMMAND ----------
 
-# Create the StagingMissingTable
+# Create the staging table
 spark.sql("""
-CREATE TABLE IF NOT EXISTS ETL.`StagingMissingTable` (
-    `TableName` STRING,
-    `SourceName` STRING
-)
-USING delta
-LOCATION '/tmp/{catalog}/{schema}/StagingMissingTable'
+    CREATE TABLE IF NOT EXISTS dbe_dbx_internships.ETL.StagingMissingTable (
+        TableName STRING,
+        SourceName STRING
+    )
 """)
 
 # COMMAND ----------
