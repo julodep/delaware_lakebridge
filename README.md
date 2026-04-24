@@ -13,7 +13,7 @@ This repository contains scripts, notebooks, and outputs related to the analysis
 - **transpiler-bladebridge-output/** — Deterministic Bladebridge transpilation outputs  
 - **.gitignore** — Ignored files (venv, cache, system files, local scripts)  
 - **Lakebridge Switch Table Explorer.ipynb** — Notebook to analyze the output of the Switch LLM transpiler
-- **master_notesbook**: First notebook of the workflow, Switch Transpiler call
+- **master_notebook**: First notebook of the workflow, Switch Transpiler call
 - **notebook_runner_metadata**: Materialization of the tables by running those notebooks
 - **README.md** — Documentation
 
